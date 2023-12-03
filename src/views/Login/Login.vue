@@ -4,6 +4,8 @@ import { registerAPI } from '@/api/LoginAPI/registerAPI.js'
 import { loginAPI } from '@/api/LoginAPI/loginAPI.js'
 import 'element-plus/es/components/message/style/css'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { useTokenStore } from '@/stores/useTokenStore'
 //注册或者登录的数据，这里注册和登录有重复数据，就直接用注册命名
 const registerData = ref({
   username: '',
@@ -45,6 +47,8 @@ const registerForm = ref(null);
 //绑定登陆表单
 const loginForm = ref(null);
 //提交表单
+const router = useRouter();
+const tokenStore = useTokenStore();
 const loginOrRegister = () => {
   //注册
   if (isShow.value === true) {
@@ -52,6 +56,8 @@ const loginOrRegister = () => {
     registerForm.value.validate(async (valid) => {
       if (valid) {
         const res = await registerAPI(registerData.value)
+        //保存token
+        tokenStore.setToken(res.data)
         ElMessage.success(res.message ? res.message : '注册成功');
       }
     })
@@ -62,7 +68,10 @@ const loginOrRegister = () => {
     loginForm.value.validate(async (valid) => {
       if (valid) {
         const res = await loginAPI(registerData.value)
+        //保存token
+        tokenStore.setToken(res.data)
         ElMessage.success(res.message ? res.message : '登录成功');
+        router.push('/')
       }
     })
   }
