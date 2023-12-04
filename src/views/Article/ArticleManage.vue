@@ -7,6 +7,8 @@ import '@vueup/vue-quill/dist/vue-quill.snow.css';
 import { addArticleAPI } from '@/api/ArticleAPI/addArticleAPI.js'
 import 'element-plus/es/components/message/style/css'
 import { ElMessage } from 'element-plus'
+import { updateArticleAPI } from '@/api/ArticleAPI/updateArticleAPI';
+import { deleteArticleAPI } from '@/api/ArticleAPI/deleteArticleAPI'
 const category = ref([])
 const articles = ref([])
 const pageSize = ref(3)
@@ -34,7 +36,6 @@ const getArticleList = async () => {
     categoryId: selectCategory.value ? selectCategory.value : null,
     state: selectStatus.value ? selectStatus.value : null
   })
-  console.log(params.value)
   const result = await getArticleListAPI(params.value)
   articles.value = result.data.items
   for (let i = 0; i < articles.value.length; i++) {
@@ -70,8 +71,33 @@ const addArticle = async (status) => {
   getArticleList()
 }
 const updateArticleEcho = (scope) => {
+  addOrUpdate.value = "更新文章"
+  form.value = {
+    id: scope.row.id,
+    title: scope.row.title,
+    categoryId: scope.row.categoryId,
+    coverImg: '',
+    content: scope.row.content,
+    state: scope.row.state
+  }
   isSHowDrawer.value = true;
-  
+}
+const addOrUpdate = ref('')
+const updateArticle = async (status) => {
+  form.value.state = status
+  console.log(form.value)
+  const result = await updateArticleAPI(form.value)
+  ElMessage.success(result.message ? result.message : '修改成功')
+  //隐藏弹窗
+  isSHowDrawer.value = false
+  //再次访问后台接口，查询所有分类
+  getArticleList()
+}
+const deleteArticle = async (scope) => {
+  const result = await deleteArticleAPI(scope.row.id)
+  ElMessage.success(result.message ? result.message : '删除成功')
+  //再次访问后台接口，查询所有分类
+  getArticleList()
 }
 </script>
 <template>
@@ -81,7 +107,7 @@ const updateArticleEcho = (scope) => {
         <div class="header">
           <span>文章管理</span>
           <div class="extra">
-            <el-button type="primary" class="add" @click="title = '发布文章'; isSHowDrawer = true">发布文章</el-button>
+            <el-button type="primary" class="add" @click="addOrUpdate = '发布文章'; isSHowDrawer = true">发布文章</el-button>
           </div>
         </div>
       </template>
@@ -105,14 +131,14 @@ const updateArticleEcho = (scope) => {
       <el-table :data="articles" style="width: 100%">
         <el-table-column prop="title" label="文章标题" width="400" />
         <el-table-column prop="categoryName" label="分类" width="200" />
-        <el-table-column prop="createTime" label="发表时间" width="200" />
+        <el-table-column prop="updateTime" label="发表时间" width="200" />
         <el-table-column prop="state" label="状态" width="250" />
         <el-table-column width="100" label="操作">
           <template #default="scope">
             <el-button size="small" class="list-button" @click="updateArticleEcho(scope)"><i
                 class="iconfont icon-xiugai"></i></el-button>
             <el-popconfirm title="确定要删除吗？" cancel-button-text="取消" confirm-button-text="确定"
-              @confirm="deleteCategory(scope)">
+              @confirm="deleteArticle(scope)">
               <template #reference>
                 <el-button size="small" type="danger" class="list-button"><i
                     class="iconfont icon-lajitong"></i></el-button>
@@ -134,7 +160,7 @@ const updateArticleEcho = (scope) => {
 
   <el-drawer v-model="isSHowDrawer" size="50%">
     <template #header>
-      <h4>添加文章</h4>
+      <h4>{{ addOrUpdate }}</h4>
     </template>
     <template #default>
       <el-form :model="form">
@@ -164,8 +190,8 @@ const updateArticleEcho = (scope) => {
     </template>
     <template #footer>
       <div style="flex: auto">
-        <el-button @click="addArticle('已发布')">发布</el-button>
-        <el-button type="primary" @click="addArticle('草稿')">草稿</el-button>
+        <el-button @click="addOrUpdate === '发布文章' ? addArticle('已发布') : updateArticle('已发布')">发布</el-button>
+        <el-button type="primary" @click="addOrUpdate === '发布文章' ? addArticle('草稿') : updateArticle('草稿')">草稿</el-button>
       </div>
     </template>
   </el-drawer>

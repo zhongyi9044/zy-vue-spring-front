@@ -15,7 +15,7 @@ const routes = [
     name:HomeVue,
     children: [
       {
-        path: '/article/category',
+        path: '/',
         component: ArticleCategory,
         name:ArticleCategory
       },

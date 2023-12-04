@@ -1,5 +1,53 @@
 <script setup>
-
+import { useRouter } from 'vue-router'
+import 'element-plus/es/components/message-box/style/css'
+import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
+import { ElMessageBox } from 'element-plus'
+import { useTokenStore } from '@/stores/useTokenStore'
+import { getUserInfoAPI } from '@/api/UserAPI/getUserInfoAPI'
+import { useUserInfoStore } from '@/stores/useUserInfoStore'
+import { ref, onMounted } from 'vue'
+const tokenStore = useTokenStore()
+const userInfoStore = useUserInfoStore()
+const router = useRouter()
+const getUserInfo = async () => {
+  const result = await getUserInfoAPI()
+  userInfoStore.setUserInfo(result.data)
+}
+const handleCommand = (command) => {
+  console.log(command)
+  if (command == "/login") {
+    ElMessageBox.confirm(
+      '确定要退出吗',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+      .then(() => {
+        ElMessage({
+          type: 'success',
+          message: '退出成功',
+        })
+        tokenStore.removeToken()
+        userInfoStore.removeUserInfo()
+        router.push('/login')
+      })
+      .catch(() => {
+        ElMessage({
+          type: 'info',
+          message: '取消退出',
+        })
+      })
+  } else {
+    console.log(`/user${command}`)
+    router.push(`/user${command}`)
+  }
+}
+onMounted(() => getUserInfo())
+const circleUrl = ref('https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png')
 </script>
 
 <template>
@@ -7,8 +55,8 @@
     <!-- 左边菜单 -->
     <el-aside width="12rem" class="left">
       <div class="logo"></div>
-      <el-menu active-text-color="#ffd04b" background-color="#232323" class="el-menu-vertical-demo"
-        text-color="#fff" router>
+      <el-menu active-text-color="#ffd04b" background-color="#232323" class="el-menu-vertical-demo" text-color="#fff"
+        router>
         <el-menu-item index='/article/category'>
           <span>文章列表</span>
         </el-menu-item>
@@ -32,19 +80,19 @@
       <el-header class="right-top">
         <div class="name">
           <span>深圳憨八嘎：</span>
-          <span>钟艺</span>
+          <span>{{ userInfoStore.myUserInfo.nickname }}</span>
         </div>
-        <el-dropdown>
+        <el-dropdown @command="handleCommand">
           <span class="el-dropdown__box">
-            <el-avatar />
+            <el-avatar :size="50" :src="circleUrl" />
             <i class="iconfont icon-xiala"></i>
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="profile"><i class="iconfont icon-gerentouxiang"></i>基本资料</el-dropdown-item>
-              <el-dropdown-item command="avatar"><i class="iconfont icon-genghuanleixing"></i>更换头像</el-dropdown-item>
-              <el-dropdown-item command="password"><i class="iconfont icon-biaozhu-16"></i>重置密码</el-dropdown-item>
-              <el-dropdown-item command="logout"><i class="iconfont icon-tuichu"></i>退出登录</el-dropdown-item>
+              <el-dropdown-item command="/info"><i class="iconfont icon-gerentouxiang"></i>基本资料</el-dropdown-item>
+              <el-dropdown-item command="/avatar"><i class="iconfont icon-genghuanleixing"></i>更换头像</el-dropdown-item>
+              <el-dropdown-item command="/resetPassword"><i class="iconfont icon-biaozhu-16"></i>重置密码</el-dropdown-item>
+              <el-dropdown-item command="/login"><i class="iconfont icon-tuichu"></i>退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
